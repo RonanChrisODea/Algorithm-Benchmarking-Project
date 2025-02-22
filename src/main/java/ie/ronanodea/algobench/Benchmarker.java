@@ -1,14 +1,15 @@
 package ie.ronanodea.algobench;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Consumer;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
-public class BenchMarker {
+public class Benchmarker {
     private static final int WARM_UP_ITERATIONS = 5;
     private final ThreadMXBean threadMXBean;
 
-    public BenchMarker() {
+    public Benchmarker() {
         this.threadMXBean = ManagementFactory.getThreadMXBean();
     }
 
@@ -27,19 +28,19 @@ public class BenchMarker {
         return dest;
     }
 
-    private void performWarmup(int size, Consumer<int[]> sortingMethod) {
-        int[] warmupArray = randomArray(size, 0, 100);
+    private void performWarmup(int size, Consumer<int[]> sortingMethod, int minValue, int maxValue) {
+        int[] warmupArray = randomArray(size, minValue, maxValue);
         for (int i = 0; i < WARM_UP_ITERATIONS; i++) {
             int[] cloned = copyArr(warmupArray);
             sortingMethod.accept(cloned);
         }
     }
 
-    public double benchmarkWallTime(int reps, int size, Consumer<int[]> sortingMethod) {
-        performWarmup(size, sortingMethod);
+    public double benchmarkWallTime(int reps, int size, Consumer<int[]> sortingMethod, int minValue, int maxValue) {
+        performWarmup(size, sortingMethod, minValue, maxValue);
         
         double totalWallTime = 0;
-        int[] arr = randomArray(size, 0, 100);
+        int[] arr = randomArray(size, minValue, maxValue);
         
         for (int i = 0; i < reps; i++) {
             int[] cloned = copyArr(arr);
@@ -55,11 +56,11 @@ public class BenchMarker {
         return totalWallTime / reps;
     }
 
-    public double benchmarkCpuTime(int reps, int size, Consumer<int[]> sortingMethod) {
-        performWarmup(size, sortingMethod);
+    public double benchmarkCpuTime(int reps, int size, Consumer<int[]> sortingMethod, int minValue, int maxValue) {
+        performWarmup(size, sortingMethod, minValue, maxValue);
         
         double totalCpuTime = 0;
-        int[] arr = randomArray(size, 0, 100);
+        int[] arr = randomArray(size, minValue, maxValue);
         
         for (int i = 0; i < reps; i++) {
             int[] cloned = copyArr(arr);
