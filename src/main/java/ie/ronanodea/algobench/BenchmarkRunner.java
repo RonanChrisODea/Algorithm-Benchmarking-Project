@@ -6,15 +6,17 @@ public class BenchmarkRunner {
     private final Benchmarker benchmarker;
     private final BenchmarkConfig config;
     private final BenchmarkResultsPrinter printer;
+    private final CSVExporter csvExporter;
 
     public BenchmarkRunner(BenchmarkConfig config) {
         this.benchmarker = new Benchmarker();
         this.config = config;
         this.printer = new BenchmarkResultsPrinter();
+        this.csvExporter = new CSVExporter(config.getArraySizes());
     }
 
     public void runAllBenchmarks() {
-        System.out.println("Starting sorting algorithm benchmarks...\n");
+        System.out.println("Starting benchmarks...\n");
         long startTime = System.nanoTime();
         
         printer.printHeader(config.getArraySizes());
@@ -28,7 +30,9 @@ public class BenchmarkRunner {
         long endTime = System.nanoTime();
         double totalTimeSeconds = (endTime - startTime) / 1_000_000_000.0;
         printer.printTotalTime(totalTimeSeconds);
-        System.out.println("\nBenchmarking complete.");
+        
+        // Export results to CSV
+        csvExporter.exportToFile();
     }
 
     private void runSortingBenchmark(String algorithmName, Consumer<int[]> sortingAlgorithm) {
@@ -46,5 +50,6 @@ public class BenchmarkRunner {
         }
 
         printer.printAlgorithmResults(algorithmName, wallTimes, cpuTimes);
+        csvExporter.addResult(algorithmName, wallTimes);
     }
 }
