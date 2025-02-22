@@ -1,14 +1,17 @@
 package ie.ronanodea.algobench;
-
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 
 public class BenchMarker {
+    private static final int WARM_UP_ITERATIONS = 5;
+    private final ThreadMXBean threadMXBean;
 
-//     This method of random number generation is encouraged by Dr. John Healy.
-//     Researching this leads me to believe this is a safer method to implement for multithreading.
-//     https://stackoverflow.com/questions/23396033/random-over-threadlocalrandom
-//     it also allows me to specify a lower/ upper bound easily.
+    public BenchMarker() {
+        this.threadMXBean = ManagementFactory.getThreadMXBean();
+    }
+
     private static int[] randomArray(int size, int min, int max) {
         int[] randArr = new int[size];
         for (int i = 0; i < randArr.length; i++) {
@@ -18,41 +21,57 @@ public class BenchMarker {
         return randArr;
     }
 
-    // method taken from class materials
     private int[] copyArr(int[] src) {
         int[] dest = new int[src.length];
         System.arraycopy(src, 0, dest, 0, src.length);
         return dest;
     }
 
+    private void performWarmup(int size, Consumer<int[]> sortingMethod) {
+        int[] warmupArray = randomArray(size, 0, 100);
+        for (int i = 0; i < WARM_UP_ITERATIONS; i++) {
+            int[] cloned = copyArr(warmupArray);
+            sortingMethod.accept(cloned);
+        }
+    }
 
-    // Here I had the idea to allow the benchmark method to accept an int
-    // to define the size of the random array, and the sorting method to be used.
-    // In order to pass a method from another class I implemented the Consumer function.
-
-    public double benchmark(int reps, int size, Consumer<int[]> sortingMethod) {
-        double total = 0;
+    public double benchmarkWallTime(int reps, int size, Consumer<int[]> sortingMethod) {
+        performWarmup(size, sortingMethod);
+        
+        double totalWallTime = 0;
         int[] arr = randomArray(size, 0, 100);
-        // useful for checking if arrays are indeed sorting correctly
-        // System.out.println(Arrays.toString(arr));
+        
         for (int i = 0; i < reps; i++) {
             int[] cloned = copyArr(arr);
-            long startTime = System.nanoTime();
+            
+            long startWallTime = System.nanoTime();
             sortingMethod.accept(cloned);
-            long endTime = System.nanoTime();
-            long timeElapsed = endTime - startTime;
-            double elapsedMillis = timeElapsed / 1000000.0;
-            total += elapsedMillis;
-            // useful for checking if arrays are indeed sorting correctly
-            //System.out.println(Arrays.toString(cloned));
-
+            long endWallTime = System.nanoTime();
+            
+            double wallTimeMs = (endWallTime - startWallTime) / 1_000_000.0;
+            totalWallTime += wallTimeMs;
         }
-        return total / reps;
-        //System.out.println("Average time: " + averageTime + " ms");
+        
+        return totalWallTime / reps;
+    }
+
+    public double benchmarkCpuTime(int reps, int size, Consumer<int[]> sortingMethod) {
+        performWarmup(size, sortingMethod);
+        
+        double totalCpuTime = 0;
+        int[] arr = randomArray(size, 0, 100);
+        
+        for (int i = 0; i < reps; i++) {
+            int[] cloned = copyArr(arr);
+            
+            long startCpuTime = threadMXBean.getCurrentThreadCpuTime();
+            sortingMethod.accept(cloned);
+            long endCpuTime = threadMXBean.getCurrentThreadCpuTime();
+            
+            double cpuTimeMs = (endCpuTime - startCpuTime) / 1_000_000.0;
+            totalCpuTime += cpuTimeMs;
+        }
+        
+        return totalCpuTime / reps;
     }
 }
-
-
-// I'd like to measure CPU time but am low on time to implement the JMH
-// https://stackoverflow.com/questions/7467245/cpu-execution-time-in-java
-// https://stackoverflow.com/questions/180158/how-do-i-time-a-methods-execution-in-java
