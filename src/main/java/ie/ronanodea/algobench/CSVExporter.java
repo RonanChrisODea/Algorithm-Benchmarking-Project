@@ -7,10 +7,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class CSVExporter {
     private final List<BenchmarkResult> results;
     private final int[] sizes;
+    private final ReentrantLock resultsLock = new ReentrantLock();
 
     private static class BenchmarkResult {
         final String algorithmName;
@@ -28,13 +30,19 @@ public class CSVExporter {
     }
 
     public void addResult(String algorithmName, double[] wallTimes) {
-        results.add(new BenchmarkResult(algorithmName, wallTimes));
+        resultsLock.lock();
+        try {
+            results.add(new BenchmarkResult(algorithmName, wallTimes));
+        } finally {
+            resultsLock.unlock();
+        }
     }
 
     public void exportToFile() {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         String filename = "benchmark_results_" + timestamp + ".csv";
 
+        resultsLock.lock();
         try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
             // Write header
             writer.print("Algorithm,");
@@ -55,6 +63,8 @@ public class CSVExporter {
             System.out.println("\nResults exported to: " + filename);
         } catch (IOException e) {
             System.err.println("Error writing to CSV file: " + e.getMessage());
+        } finally {
+            resultsLock.unlock();
         }
     }
 }
