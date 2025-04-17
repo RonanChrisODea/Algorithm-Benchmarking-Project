@@ -64,8 +64,8 @@ AlgoBench/
 To get a copy of this project on your local machine, open a terminal (or Git Bash on Windows) and run:
 
 ```bash
-git clone https://github.com/RonanChrisODea/AlgoBench.git
-cd AlgoBench
+git clone https://github.com/RonanChrisODea/Algorithm-Benchmarking-Project.git
+cd Algorithm-Benchmarking-Project
 ```
 
 ## Building and Running the Application
