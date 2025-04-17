@@ -2,10 +2,6 @@
 
 This repository demonstrates a performance benchmarking application for comparing various sorting algorithms across different input sizes and data distributions, built using Java and Gradle.
 
-## Overview
-
-This project demonstrates a performance benchmarking application for comparing various sorting algorithms. It's built with Java and uses Gradle for building and running.
-
 ## Project Structure
 
 The project follows the standard Gradle directory structure:
